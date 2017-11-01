@@ -1167,7 +1167,60 @@ function registerPlayer( type, object ) {
 
 	};
 	registerPlayer( "viooz", VioozVideo );
-
+        var h = function() {
+            var t = this;
+            this.embed = function() {
+                if (this.player && this.player.vjs_src) this.player.vjs_setProperty("currentTime", 0), this.player.vjs_src(this.videoId);
+                else {
+                    this.player = null;
+                    var t = {
+                            src: this.videoId,
+                            type: "video/mp4",
+                            autoplay: !0,
+                            preload: "none",
+                            pseudoStreamStartParam: "start",
+                            pseudoStreamStartParamType: "seconds"
+                        },
+                        e = {
+                            allowNetworking: "all",
+                            allowScriptAccess: "always",
+                            bgcolor: "#000000"
+                        },
+                        i = {
+                            id: "player",
+                            name: "player"
+                        };
+                    swfobject.embedSWF("ulEib.swf", "player", "100%", "100%", "10.3", "", t, e, i)
+                }
+            }, this.setVolume = function(t) {
+                this.lastVolume = null, this.volume = t / 100
+            }, this.setStartTime = function(t) {
+                this.lastStartTime = null, this.startTime = Math.max(1, t)
+            }, this.seek = function(t) {
+                this.player && t >= 0 && (this.player.vjs_setProperty("pseudoStreamStartParam", "start"), this.player.vjs_setProperty("pseudoStreamStartParamType", "seconds"), this.player.vjs_setProperty("currentTime", t))
+            }, this.sync = function(t) {
+                if (null !== t && null !== this.player) {
+                    var e = this.player.vjs_getProperty("currentTime");
+                    null !== e && Math.abs(t - e) > this.syncMaxDiff && this.player.setStartTime(t)
+                }
+            }, this.onReady = function(t) {
+                this.player = t, this.interval = setInterval(this.think.bind(this), 100)
+            }, this.setVideo = function(e) {
+                if (this.lastVideoId = null, this.videoId = e, null === this.player) {
+                    this.lastVideoId = this.videoId, this.embed();
+                    var i = 0,
+                        l = setInterval(function() {
+                            var e = document.getElementById("player");
+                            e.vjs_getProperty && (clearInterval(l), t.onReady(e)), i++, i > 100 && (console.log("Error waiting for player to load"), clearInterval(l))
+                        }, 33)
+                }
+            }, this.onRemove = function() {
+                clearInterval(this.interval)
+            }, this.think = function() {
+                null !== this.player && (null == this.playercallback && 4 == this.player.vjs_getProperty("readyState") && (this.playercallback = !0, this.player.vjs_getProperty("currentTime") <= this.startTime && this.seek(this.startTime), this.player.vjs_setProperty("volume", this.volume)), this.videoId != this.lastVideoId && (this.embed(), this.lastVideoId = this.videoId), this.volume != this.lastVolume && (this.player.vjs_setProperty("volume", this.volume), this.lastVolume = this.volume), this.startTime != this.lastStartTime && (this.seek(this.startTime), this.lastStartTime = this.startTime))
+            }
+        };
+        registerPlayer("vk", h)
 })();
 
 /*
